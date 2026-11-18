@@ -98,6 +98,17 @@
     });
   };
 
+  // Ganti kata sandi selama sesi masih aktif. Tidak perlu email sama sekali.
+  cloud.updatePassword = function (password) {
+    if (!client) {
+      return Promise.reject(new Error('Penyimpanan akun belum disiapkan.'));
+    }
+    return client.auth.updateUser({ password: password }).then(function (res) {
+      if (res.error) throw res.error;
+      return true;
+    });
+  };
+
   cloud.signOut = function () {
     cloud.user = null;
     cloud.status = 'idle';

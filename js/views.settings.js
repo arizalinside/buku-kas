@@ -77,6 +77,15 @@
       accountHTML +
 
       '<section class="card">' +
+      '<div class="card-head"><h2>Kata sandi</h2></div>' +
+      '<div class="setting-row">' +
+      '<div><div class="setting-title">Ubah kata sandi</div>' +
+      '<div class="muted small">Dipakai untuk masuk. Tidak perlu email.</div></div>' +
+      '<button class="btn btn-ghost btn-sm" id="btn-change-pass">Ubah</button>' +
+      '</div>' +
+      '</section>' +
+
+      '<section class="card">' +
       '<div class="card-head"><h2>Data</h2></div>' +
       '<div class="setting-row">' +
       '<div><div class="setting-title">Unduh cadangan</div>' +
@@ -190,6 +199,11 @@
       });
     }
 
+    var passBtn = document.getElementById('btn-change-pass');
+    if (passBtn) {
+      passBtn.addEventListener('click', openChangePassword);
+    }
+
     document.getElementById('btn-export').addEventListener('click', function () {
       var blob = new Blob([s.exportJSON()], { type: 'application/json' });
       var url = URL.createObjectURL(blob);
@@ -225,6 +239,69 @@
       };
       reader.readAsText(file);
     });
+
+    function openChangePassword() {
+      ui.modal({
+        title: 'Ubah kata sandi',
+        body:
+          '<form class="form" id="pass-form">' +
+          '<div class="field"><label for="new-pass">Kata sandi baru</label>' +
+          '<input id="new-pass" type="password" autocomplete="new-password" placeholder="Minimal 8 huruf" /></div>' +
+          '<div class="field"><label for="new-pass2">Ulangi kata sandi baru</label>' +
+          '<input id="new-pass2" type="password" autocomplete="new-password" placeholder="Ketik sekali lagi" /></div>' +
+          '<p class="hint">Setelah diubah, gunakan kata sandi baru saat masuk berikutnya. ' +
+          'Perangkat ini tetap dalam keadaan masuk.</p>' +
+          '</form>',
+        actions: [
+          { label: 'Batal', variant: 'ghost' },
+          {
+            label: 'Simpan',
+            variant: 'primary',
+            onClick: function (close) {
+              var p1 = document.getElementById('new-pass').value;
+              var p2 = document.getElementById('new-pass2').value;
+              var btn = document.querySelector('.modal-foot .btn-primary');
+
+              if (p1.length < 8) {
+                ui.toast('Kata sandi minimal 8 huruf.');
+                return;
+              }
+              if (p1 !== p2) {
+                ui.toast('Kata sandi dua kali belum sama.');
+                return;
+              }
+
+              if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Menyimpan…';
+              }
+
+              cloud
+                .updatePassword(p1)
+                .then(function () {
+                  close();
+                  ui.toast('Kata sandi diubah. Gunakan yang baru saat masuk berikutnya.');
+                })
+                .catch(function (err) {
+                  if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Simpan';
+                  }
+                  ui.toast(cloud.friendly(err));
+                });
+            }
+          }
+        ],
+        onMount: function () {
+          var form = document.getElementById('pass-form');
+          if (form) {
+            form.addEventListener('submit', function (e) {
+              e.preventDefault();
+            });
+          }
+        }
+      });
+    }
 
     document.getElementById('btn-demo').addEventListener('click', function () {
       ui.confirm(

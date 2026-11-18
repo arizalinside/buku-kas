@@ -56,7 +56,18 @@ untuk menulis ke database.
 diketik di halaman Masuk. Kata sandi disimpan di Supabase, bukan di kode, jadi
 tidak bisa dibaca orang yang membuka halaman web.
 
-Mengubah kata sandi: **Authentication → Users → pilih akun → Reset password**.
+### Mengubah kata sandi
+
+**Dari aplikasi (disarankan):** masuk → **Pengaturan → Kata sandi → Ubah**.
+Tidak perlu email sama sekali, karena Anda sedang login dan Supabase
+mengizinkan penggantian kata sandi langsung dari sesi yang aktif.
+
+**Dari dashboard:** Authentication → Users → tombol ⋯ → **Reset password**.
+Cara ini mengirim tautan ke email akun, jadi hanya berguna kalau emailnya nyata.
+
+Kalau email akunnya dummy (tidak bisa menerima surat), pemulihan lewat email
+tidak akan pernah berhasil. Supaya aman, ganti email akun ke alamat yang benar
+di **Authentication → Users**, lalu ubah kata sandinya dari aplikasi.
 
 ---
 

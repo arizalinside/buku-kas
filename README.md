@@ -58,6 +58,7 @@ Lalu buka `http://localhost:8080`.
 ## Login dan penyimpanan
 
 **Login:** email + kata sandi, diperiksa oleh Supabase di server. Kata sandi
+bisa diganti dari **Pengaturan → Kata sandi**, tanpa perlu email. Kata sandi
 **tidak disimpan di kode** maupun di perangkat, jadi tidak bisa dibaca orang
 yang membuka halaman. Tidak ada pendaftaran dan tidak ada kode email; akun
 dibuat sekali di dashboard Supabase (lihat panduan). Sesi tersimpan di
