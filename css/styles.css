@@ -1,5 +1,5 @@
 /* ============================================================
-   Buku Uang — buku kas toko
+   Buku Hutang — buku belanja dan hutang toko
    Arah visual: lembar buku kas bergaris.
    Kertas dingin, garis sebagai struktur, angka monospace rata
    kanan, satu aksen hijau tinta, tanpa kartu berbayang.
@@ -31,6 +31,7 @@
   --pay-soft: #e8edf5;
 
   --overlay: rgba(18, 22, 19, 0.45);
+  --sheen: rgba(255, 255, 255, 0.62);
   --inverse: #ffffff;
 
   --font-display: ui-serif, Georgia, "Times New Roman", serif;
@@ -83,6 +84,7 @@
     --pay-soft: #1d2531;
 
     --overlay: rgba(4, 6, 5, 0.62);
+    --sheen: rgba(255, 255, 255, 0.55);
     --inverse: #121513;
 
     --shadow-overlay: 0 24px 48px -24px rgba(0, 0, 0, 0.85);
@@ -204,14 +206,6 @@ svg.ic {
   align-items: baseline;
   gap: var(--s-2);
   padding: var(--s-1) var(--s-2);
-}
-
-.brand-mark {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--leaf);
-  line-height: 1;
 }
 
 .brand-name {
@@ -583,57 +577,167 @@ svg.ic {
 
 /* ---------- ringkasan beranda ---------- */
 
-.statement {
+
+
+.chart-card {
+  margin-bottom: var(--s-4);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 172px;
+  padding-top: var(--s-3);
+}
+
+.chart-col {
+  position: relative;
+  flex: 1;
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: var(--s-6);
-  align-items: end;
-  padding: var(--s-5) 0 var(--s-4);
-  border-bottom: 1px solid var(--rule-strong);
-  margin-bottom: var(--s-5);
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  min-width: 0;
+  cursor: pointer;
+  outline: none;
 }
 
-.statement-label {
-  font-size: 12.5px;
-  color: var(--ink-soft);
+.chart-col:focus-visible {
+  outline: 2px solid var(--leaf);
+  outline-offset: 2px;
 }
 
-.statement-value {
-  font-family: var(--font-num);
-  font-size: clamp(28px, 4vw, 38px);
+.chart-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  min-width: 98px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-control);
+  box-shadow: var(--shadow-md);
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.12s linear, visibility 0.12s linear;
+  z-index: 5;
+}
+
+.chart-tip strong {
+  font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  margin-top: var(--s-1);
+  color: var(--ink-muted);
 }
 
-.statement-note {
+.chart-tip span {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.tip-in {
+  color: var(--money-in);
+}
+
+.tip-out {
+  color: var(--money-out);
+}
+
+.chart-col:hover .chart-tip,
+.chart-col:focus-visible .chart-tip,
+.chart-col.is-active .chart-tip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.chart-col:first-child .chart-tip {
+  left: 0;
+  transform: none;
+}
+
+.chart-col:last-child .chart-tip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+}
+
+.chart-bar {
+  flex: 1 1 0;
+  min-width: 2px;
+  max-width: 12px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+}
+
+.chart-bar.in {
+  background: var(--money-in);
+}
+
+.chart-bar.out {
+  background: var(--money-out);
+}
+
+/* Satu deret saja (belanja): batang dibuat lebih lebar supaya terbaca. */
+.chart-bars.solo .chart-bar {
+  max-width: 28px;
+}
+
+.chart-label {
+  font-family: var(--font-num);
+  font-size: 9.5px;
+  color: var(--ink-muted);
+  text-align: center;
+  padding-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 12px;
   color: var(--ink-muted);
-  margin-top: var(--s-2);
 }
 
-.statement-side {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-4);
-  border-left: 1px solid var(--rule);
-  padding-left: var(--s-5);
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: 0;
 }
 
-.statement-side dt {
-  font-size: 12px;
-  color: var(--ink-muted);
-  margin-bottom: 2px;
+.legend-dot.in {
+  background: var(--money-in);
 }
 
-.statement-side dd {
-  font-family: var(--font-num);
-  font-size: 17px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+.legend-dot.out {
+  background: var(--money-out);
 }
+
+
+
+
+
 
 /* ---------- statistik (rekap) ---------- */
 
@@ -697,7 +801,7 @@ svg.ic {
 
 .debt-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s-4);
 }
 
@@ -743,28 +847,53 @@ svg.ic {
 /* ---------- progres ---------- */
 
 .bar-track {
-  height: 6px;
-  background: var(--rule);
+  height: 10px;
+  background: var(--surface-sunk);
+  border-radius: var(--r-round);
   overflow: hidden;
 }
 
 .bar-fill {
+  position: relative;
   display: block;
   height: 100%;
-  background: var(--leaf);
+  border-radius: inherit;
+  background-color: var(--leaf);
+  /* Kilau bergerak pelan supaya jelas ini progress bar, bukan garis biasa.
+     Digambar sebagai latar elemennya sendiri, bukan lewat ::after, supaya
+     tidak terpotong oleh overflow dan tetap berjalan di Safari. */
+  background-image: linear-gradient(
+    105deg,
+    transparent 42%,
+    var(--sheen) 50%,
+    transparent 58%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  animation: bar-shimmer 1.8s linear infinite;
   transition: width 0.2s linear;
 }
 
+@keyframes bar-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
 .bar-fill.good {
-  background: var(--money-in);
+  background-color: var(--money-in);
 }
 
 .bar-fill.warn {
-  background: var(--money-out);
+  background-color: var(--money-out);
 }
 
 .bar-fill.over {
-  background: var(--money-out);
+  background-color: var(--money-out);
 }
 
 /* ---------- baris ringkas ---------- */
@@ -1851,28 +1980,7 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .debt-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--s-3) var(--s-4);
-  }
 
-  .debt-grid > div:nth-child(3) {
-    padding-left: 0;
-    border-left: 0;
-  }
-
-  .statement {
-    grid-template-columns: 1fr;
-    align-items: start;
-    gap: var(--s-4);
-  }
-
-  .statement-side {
-    border-left: 0;
-    border-top: 1px solid var(--rule);
-    padding-left: 0;
-    padding-top: var(--s-3);
-  }
 }
 
 @media (max-width: 860px) {
@@ -2002,13 +2110,7 @@ code {
   }
 
   /* ringkasan & angka */
-  .statement-value {
-    font-size: 30px;
-  }
 
-  .statement-side dd {
-    font-size: 16px;
-  }
 
   .summary-line {
     display: grid;
@@ -2192,9 +2294,6 @@ code {
     font-size: 17px;
   }
 
-  .statement-value {
-    font-size: 27px;
-  }
 
   .stat-grid-3 {
     grid-template-columns: 1fr;
@@ -2378,6 +2477,19 @@ code {
 }
 
 @media (max-width: 520px) {
+  .chart {
+    height: 150px;
+    gap: 3px;
+  }
+
+  .chart-label {
+    font-size: 8.5px;
+  }
+
+  .chart-col:not(:nth-child(3n + 1)) .chart-label {
+    visibility: hidden;
+  }
+
   .stat-grid-3 {
     grid-template-columns: 1fr 1fr;
   }
@@ -2386,13 +2498,7 @@ code {
     grid-column: 1 / -1;
   }
 
-  .statement-value {
-    font-size: 26px;
-  }
 
-  .debt-grid {
-    gap: var(--s-3);
-  }
 }
 
 /* ponsel dalam posisi mendatar */
@@ -2422,6 +2528,16 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bar-fill {
+    animation: none;
+    background-image: repeating-linear-gradient(
+      115deg,
+      transparent 0 10px,
+      var(--sheen) 10px 20px
+    );
+    background-size: auto;
+  }
+
   *,
   *::before,
   *::after {
@@ -2429,5 +2545,55 @@ code {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+  }
+}
+
+
+/* ---------- ringkasan hari ini & hutang ---------- */
+
+.today {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: var(--s-4);
+}
+
+.today-label {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 2px;
+}
+
+.today-value {
+  font-family: var(--font-num);
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.debt-main {
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: var(--s-3);
+}
+
+.debt-remaining {
+  display: block;
+  font-family: var(--font-num);
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+@media (max-width: 400px) {
+  .today-value {
+    font-size: 16px;
   }
 }

@@ -17,7 +17,7 @@
     chart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
     settings:
       '<circle cx="12" cy="12" r="3"/>' +
-      '<path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/>',
+      '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
     plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
     x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
     search: '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.7" y2="16.7"/>',
@@ -97,6 +97,13 @@
     return DAYS_SHORT[dt.getDay()] + ', ' + p.d + ' ' + MONTHS_SHORT[p.m - 1] + ' ' + p.y;
   };
 
+  // Label ringkas untuk sumbu grafik: 12/11
+  ui.dateTick = function (dateStr) {
+    var p = dateParts(dateStr);
+    if (!p) return '';
+    return p.d + '/' + p.m;
+  };
+
   ui.dateShort = function (dateStr) {
     var p = dateParts(dateStr);
     if (!p) return String(dateStr || '');
@@ -153,14 +160,13 @@
   };
 
   ui.txRow = function (t) {
-    var isIncome = t.type === 'income';
     var isPay = t.type === 'debt_payment';
-    var iconName = isIncome ? 'arrow-up' : isPay ? 'wallet' : 'arrow-down';
-    var iconClass = isIncome ? 'in' : isPay ? 'pay' : 'out';
-    var amountClass = isIncome ? 'pos' : isPay ? 'pay' : 'neg';
-    var sign = isIncome ? '+' : '−';
+    var iconName = isPay ? 'wallet' : 'arrow-down';
+    var iconClass = isPay ? 'pay' : 'out';
+    var amountClass = isPay ? 'pay' : 'neg';
+    var sign = '−';
 
-    var title = t.note || (isIncome ? 'Uang masuk' : isPay ? 'Bayar hutang' : 'Uang keluar');
+    var title = t.note || (isPay ? 'Bayar hutang' : 'Belanja');
     var sub = ui.dateLabel(t.date);
 
     if (t.category) {
@@ -228,6 +234,7 @@
       b.addEventListener('click', function () {
         var act = (opts.actions || [])[parseInt(b.getAttribute('data-action'), 10)];
         if (act && typeof act.onClick === 'function') act.onClick(close, b);
+        else close();
       });
     });
 

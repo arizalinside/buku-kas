@@ -4,11 +4,10 @@
   var App = (window.App = window.App || {});
 
   var DATA_KEY = 'kasbuku.data.v1';
-  var VERSION = 3;
+  var VERSION = 4;
 
   var TYPES = [
-    { value: 'income', label: 'Uang masuk' },
-    { value: 'expense', label: 'Uang keluar' },
+    { value: 'expense', label: 'Belanja' },
     { value: 'debt_payment', label: 'Bayar hutang' }
   ];
 
@@ -79,7 +78,7 @@
   }
 
   // Menerima data versi lama (buku/akun/pindah dana) dan menyederhanakannya
-  // menjadi kas toko: hanya uang masuk, uang keluar, dan bayar hutang.
+  // menjadi buku hutang: hanya belanja dan bayar hutang.
   function normalize(raw) {
     if (!raw || typeof raw !== 'object') return defaults();
 
@@ -90,12 +89,13 @@
 
     var list = Array.isArray(raw.transactions) ? raw.transactions : [];
 
+    // Catatan uang masuk dan jenis lama lain (transfer, prive, modal)
+    // dilewati karena buku ini hanya menghitung belanja dan hutang.
     list.forEach(function (t) {
       var mapped;
-      if (t.type === 'income') mapped = 'income';
-      else if (t.type === 'expense') mapped = 'expense';
+      if (t.type === 'expense') mapped = 'expense';
       else if (t.type === 'debt_payment') mapped = 'debt_payment';
-      else return; // transfer / prive / modal / tidak dikenal: dilewati
+      else return;
 
       var tx = {
         id: t.id || uid('tx'),
@@ -117,23 +117,6 @@
       if (tx.amount > 0) out.transactions.push(tx);
     });
 
-    // Saldo awal dari versi lama dijadikan uang masuk pertama.
-    if (Array.isArray(raw.accounts) && raw.accounts.length) {
-      var opening = raw.accounts.reduce(function (sum, a) {
-        return sum + Math.round(Number(a.openingBalance) || 0);
-      }, 0);
-      if (opening > 0) {
-        out.transactions.push({
-          id: uid('tx'),
-          date: todayISO(),
-          type: 'income',
-          amount: opening,
-          note: 'Saldo awal',
-          createdAt: Date.now()
-        });
-      }
-    }
-
     return out;
   }
 
@@ -148,7 +131,7 @@
         return state;
       }
     } catch (e) {
-      console.warn('Buku Uang: gagal membaca data', e);
+      console.warn('Buku Hutang: gagal membaca data', e);
     }
     state = defaults();
     save();
@@ -160,7 +143,7 @@
       localStorage.setItem(DATA_KEY, JSON.stringify(state));
       return true;
     } catch (e) {
-      console.warn('Buku Uang: gagal menyimpan data', e);
+      console.warn('Buku Hutang: gagal menyimpan data', e);
       return false;
     }
   }
@@ -209,7 +192,7 @@
 
   function addTransaction(data) {
     ensure();
-    var type = data.type === 'income' || data.type === 'debt_payment' ? data.type : 'expense';
+    var type = data.type === 'debt_payment' ? 'debt_payment' : 'expense';
     var tx = {
       id: uid('tx'),
       date: isDate(data.date) ? data.date : todayISO(),
@@ -233,7 +216,7 @@
     var tx = byId(id);
     if (!tx) return null;
 
-    var type = data.type === 'income' || data.type === 'debt_payment' ? data.type : 'expense';
+    var type = data.type === 'debt_payment' ? 'debt_payment' : 'expense';
     tx.type = type;
     tx.date = isDate(data.date) ? data.date : tx.date;
     tx.amount = Math.round(Number(data.amount) || 0);
@@ -273,57 +256,42 @@
   /* ---------- hitungan ---------- */
 
   function totals(from, to) {
-    var income = 0;
     var expense = 0;
     var paid = 0;
 
     transactions().forEach(function (t) {
       if (from && t.date < from) return;
       if (to && t.date > to) return;
-      if (t.type === 'income') income += t.amount;
-      else if (t.type === 'expense') expense += t.amount;
+      if (t.type === 'expense') expense += t.amount;
       else if (t.type === 'debt_payment') paid += t.amount;
     });
 
-    return { income: income, expense: expense, paid: paid, net: income - expense - paid };
+    return { expense: expense, paid: paid };
   }
 
-  // Ringkasan hutang ke uang pribadi pemilik.
+  // Ringkasan hutang ke uang pribadi pemilik. Belanja yang dibayar dari
+  // uang toko tidak menambah hutang, tetapi tetap dihitung sebagai belanja.
   function debtStats() {
     var totalExpense = 0;
     var borrowed = 0;
     var paid = 0;
-    var income = 0;
-    var cashExpense = 0;
 
     transactions().forEach(function (t) {
-      if (t.type === 'income') {
-        income += t.amount;
-        return;
-      }
       if (t.type === 'debt_payment') {
         paid += t.amount;
         return;
       }
-      if (t.type === 'expense') {
-        totalExpense += t.amount;
-        if (t.funding === 'business') cashExpense += t.amount;
-        else borrowed += t.amount;
-      }
+      if (t.type !== 'expense') return;
+      totalExpense += t.amount;
+      if (t.funding !== 'business') borrowed += t.amount;
     });
 
     return {
       totalExpense: totalExpense,
       borrowed: borrowed,
       paid: paid,
-      remaining: borrowed - paid,
-      income: income,
-      cash: income - cashExpense - paid
+      remaining: borrowed - paid
     };
-  }
-
-  function balance() {
-    return debtStats().cash;
   }
 
   /* ---------- rentang tanggal ---------- */
@@ -386,10 +354,9 @@
     var pages = Math.max(1, Math.ceil(total / perPage));
     var page = Math.min(Math.max(1, parseInt(opts.page, 10) || 1), pages);
 
-    var sum = { income: 0, expense: 0, paid: 0 };
+    var sum = { expense: 0, paid: 0 };
     list.forEach(function (t) {
-      if (t.type === 'income') sum.income += t.amount;
-      else if (t.type === 'expense') sum.expense += t.amount;
+      if (t.type === 'expense') sum.expense += t.amount;
       else if (t.type === 'debt_payment') sum.paid += t.amount;
     });
 
@@ -434,6 +401,61 @@
       });
   }
 
+  // Data grafik: total belanja per tanggal, digabung jadi beberapa batang
+  // kalau rentangnya panjang supaya tetap terbaca di layar ponsel.
+  function chartTotals(from, to, maxBars) {
+    var map = {};
+    var dataDates = [];
+
+    transactions().forEach(function (t) {
+      if (t.type !== 'expense') return;
+      if (from && t.date < from) return;
+      if (to && t.date > to) return;
+      if (!map[t.date]) {
+        map[t.date] = { date: t.date, expense: 0 };
+        dataDates.push(t.date);
+      }
+      map[t.date].expense += t.amount;
+    });
+
+    // Kalau rentangnya jelas, isi juga hari yang tidak ada catatannya
+    // supaya grafiknya punya jarak waktu yang benar.
+    var dates;
+    if (from && to) {
+      dates = [];
+      var cursor = from;
+      var guard = 0;
+      while (cursor <= to && guard < 400) {
+        dates.push(cursor);
+        cursor = shiftDate(cursor, 1);
+        guard += 1;
+      }
+    } else {
+      dates = dataDates.slice().sort();
+    }
+
+    var rows = dates.map(function (d) {
+      return map[d] || { date: d, expense: 0 };
+    });
+
+    if (!rows.length) return [];
+
+    var bucketSize = Math.max(1, Math.ceil(rows.length / (maxBars || 14)));
+    if (bucketSize === 1) return rows;
+
+    var out = [];
+    for (var i = 0; i < rows.length; i += bucketSize) {
+      var chunk = rows.slice(i, i + bucketSize);
+      out.push({
+        date: chunk[0].date,
+        expense: chunk.reduce(function (n, r) {
+          return n + r.expense;
+        }, 0)
+      });
+    }
+    return out;
+  }
+
   /* ---------- preferensi ---------- */
 
   function perPage() {
@@ -467,31 +489,22 @@
       state.transactions.push(tx);
     }
 
-    push(0, 'income', 385000, 'Penjualan hari ini');
     push(0, 'expense', 72000, 'Beli minyak goreng 2 liter', 'personal');
     push(0, 'expense', 25000, 'Beli plastik kemasan', 'business');
 
-    push(1, 'income', 420000, 'Penjualan hari ini');
     push(1, 'expense', 32000, 'Beli telur 1 kg', 'personal');
     push(1, 'expense', 22000, 'Beli gas LPG 3 kg', 'business');
 
-    push(2, 'income', 310000, 'Penjualan hari ini');
     push(2, 'expense', 85000, 'Beli gula pasir 5 kg', 'personal');
 
-    push(3, 'income', 365000, 'Penjualan hari ini');
     push(3, 'expense', 320000, 'Beli beras 25 kg', 'personal');
     push(3, 'expense', 45000, 'Beli sabun dan pewangi', 'business');
 
-    push(4, 'income', 290000, 'Penjualan hari ini');
     push(4, 'expense', 150000, 'Bayar listrik toko', 'business');
 
-    push(5, 'income', 410000, 'Penjualan hari ini');
     push(5, 'expense', 65000, 'Beli kecap dan saus', 'personal');
 
-    push(6, 'income', 340000, 'Penjualan hari ini');
-
     push(7, 'debt_payment', 500000, 'Bayar hutang ke uang pribadi');
-    push(7, 'income', 300000, 'Penjualan hari ini');
     push(7, 'expense', 48000, 'Beli kopi sachet 1 kotak', 'business');
 
     save();
@@ -541,10 +554,10 @@
 
     totals: totals,
     debtStats: debtStats,
-    balance: balance,
 
     categories: categories,
     categoryTotals: categoryTotals,
+    chartTotals: chartTotals,
     filterTransactions: filterTransactions,
     perPage: perPage,
     setPerPage: setPerPage,

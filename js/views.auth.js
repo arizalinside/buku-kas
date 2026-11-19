@@ -42,7 +42,7 @@
     var el = document.getElementById('auth-root');
     if (!el) return;
 
-    document.title = 'Masuk · Buku Uang';
+    document.title = 'Masuk · Buku Hutang';
     el.classList.remove('hidden');
     var appEl = document.getElementById('app-root');
     if (appEl) appEl.classList.add('hidden');
@@ -50,9 +50,9 @@
     el.innerHTML =
       '<div class="auth-page">' +
       '<div class="auth-box">' +
-      '<div class="auth-brand"><span class="brand-mark">B</span>' +
-      '<div><div class="auth-brand-name">Buku Uang</div>' +
-      '<div class="auth-brand-sub">Catatan keuangan keluarga</div></div></div>' +
+      '<div class="auth-brand">' +
+      '<div><div class="auth-brand-name">Buku Hutang</div>' +
+      '<div class="auth-brand-sub">Catatan belanja dan hutang toko</div></div></div>' +
       (pesan ? '<p class="auth-notice error">' + ui.esc(pesan) + '</p>' : '') +
       '<div class="auth-body">' +
       '<h1 class="auth-title">Masuk</h1>' +

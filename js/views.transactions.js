@@ -46,7 +46,7 @@
     root.innerHTML =
       '<div class="page-head">' +
       '<div><h1>Catatan</h1>' +
-      '<p class="sub">Semua uang masuk dan uang keluar</p></div>' +
+      '<p class="sub">Semua belanja dan pembayaran hutang</p></div>' +
       '</div>' +
       '<div class="card">' +
       '<div class="toolbar">' +
@@ -71,7 +71,7 @@
       '</div>' +
 
       '<div class="chips" id="type-chips">' +
-      [{ v: 'all', l: 'Semua' }, { v: 'income', l: 'Uang masuk' }, { v: 'expense', l: 'Uang keluar' }, { v: 'debt_payment', l: 'Bayar hutang' }]
+      [{ v: 'all', l: 'Semua' }, { v: 'expense', l: 'Belanja' }, { v: 'debt_payment', l: 'Bayar hutang' }]
         .map(function (t) {
           return '<button type="button" class="chip' + (t.v === st.type ? ' active' : '') +
             '" data-type="' + t.v + '">' + t.l + '</button>';
@@ -118,8 +118,7 @@
         '<div class="summary-line">' +
         '<span>Menampilkan <strong>' + res.from + '–' + res.to + '</strong> dari <strong>' +
         res.total + '</strong> catatan</span>' +
-        '<span>Masuk <strong class="pos">' + ui.rupiah(res.sum.income) + '</strong></span>' +
-        '<span>Keluar <strong class="neg">' + ui.rupiah(res.sum.expense) + '</strong></span>' +
+        '<span>Belanja <strong class="neg">' + ui.rupiah(res.sum.expense) + '</strong></span>' +
         (res.sum.paid ? '<span>Bayar hutang <strong class="pay">' + ui.rupiah(res.sum.paid) + '</strong></span>' : '') +
         '</div>';
 
@@ -212,6 +211,7 @@
         paint();
       }
     });
+    if (App.motion) App.motion.enter(root);
   };
 
   /* ---------- menu tambah ---------- */
@@ -221,13 +221,9 @@
       title: 'Catat apa?',
       body:
         '<div class="choose-list">' +
-        '<button type="button" class="choose-item" data-new="income">' +
-        '<span class="choose-icon in">' + ui.icon('arrow-up', 18) + '</span>' +
-        '<span class="choose-main"><strong>Uang masuk</strong><span>Hasil penjualan</span></span>' +
-        '</button>' +
         '<button type="button" class="choose-item" data-new="expense">' +
         '<span class="choose-icon out">' + ui.icon('arrow-down', 18) + '</span>' +
-        '<span class="choose-main"><strong>Uang keluar</strong><span>Belanja barang</span></span>' +
+        '<span class="choose-main"><strong>Belanja</strong><span>Barang yang dibeli</span></span>' +
         '</button>' +
         '<button type="button" class="choose-item" data-new="debt_payment">' +
         '<span class="choose-icon pay">' + ui.icon('wallet', 18) + '</span>' +
@@ -260,16 +256,13 @@
     var tx = id ? s.byId(id) : null;
     var type = tx ? tx.type : presetType || 'expense';
     var isExpense = type === 'expense';
-    var isIncome = type === 'income';
 
-    var title = tx ? 'Ubah catatan' : isIncome ? 'Uang masuk' : isExpense ? 'Uang keluar' : 'Bayar hutang';
+    var title = tx ? 'Ubah catatan' : isExpense ? 'Belanja' : 'Bayar hutang';
     var noteValue = tx
       ? tx.note
-      : isIncome
-        ? 'Penjualan'
-        : isExpense
-          ? ''
-          : 'Bayar hutang ke uang pribadi';
+      : isExpense
+        ? ''
+        : 'Bayar hutang ke uang pribadi';
     var funding = tx && tx.funding === 'business' ? 'business' : 'personal';
 
     var body =
@@ -278,7 +271,7 @@
       (isExpense ? 'Beli apa?' : 'Keterangan') +
       '</label>' +
       '<input id="tx-note" autocomplete="off" placeholder="' +
-      (isExpense ? 'mis. minyak goreng 2 liter' : 'mis. penjualan hari ini') +
+      (isExpense ? 'mis. minyak goreng 2 liter' : 'mis. bayar hutang mingguan') +
       '" value="' + ui.esc(noteValue) + '" /></div>' +
 
       '<div class="field"><label for="tx-amount">Jumlah</label>' +

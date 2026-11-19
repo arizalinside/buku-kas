@@ -108,7 +108,7 @@
       '<div class="card-head"><h2>Hapus data</h2></div>' +
       '<div class="setting-row">' +
       '<div><div class="setting-title">Hapus semua catatan</div>' +
-      '<div class="muted small">Semua uang masuk dan keluar dihapus.</div></div>' +
+      '<div class="muted small">Semua belanja dan pembayaran hutang dihapus.</div></div>' +
       '<button class="btn btn-ghost btn-sm" id="btn-clear">Hapus catatan</button>' +
       '</div>' +
       '<div class="setting-row">' +
@@ -121,7 +121,7 @@
       '<section class="card">' +
       '<div class="card-head"><h2>Tentang aplikasi</h2></div>' +
       '<p class="note-box">' +
-      'Buku Uang — pencatatan kas toko. Login memakai akun Supabase; ' +
+      'Buku Hutang — pencatatan belanja dan hutang toko. Login memakai akun Supabase; ' +
       'kata sandi tidak disimpan di aplikasi. Untuk mengubahnya, buka ' +
       'Authentication &rarr; Users di dashboard Supabase.' +
       '</p>' +
@@ -209,7 +209,7 @@
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'buku-uang-cadangan-' + s.todayISO() + '.json';
+      a.download = 'buku-hutang-cadangan-' + s.todayISO() + '.json';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -338,5 +338,7 @@
         { danger: true, yesLabel: 'Reset' }
       );
     });
+
+    if (App.motion) App.motion.enter(root);
   };
 })();

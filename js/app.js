@@ -23,7 +23,7 @@
 
   function routeLabel(id) {
     for (var i = 0; i < ROUTES.length; i++) if (ROUTES[i].id === id) return ROUTES[i].label;
-    return 'Buku Uang';
+    return 'Buku Hutang';
   }
 
   function routeFromHash() {
@@ -74,7 +74,7 @@
       el.classList.toggle('active', el.getAttribute('data-route') === App.uiState.route);
     });
 
-    document.title = routeLabel(App.uiState.route) + ' · Buku Uang';
+    document.title = routeLabel(App.uiState.route) + ' · Buku Hutang';
     savePrefs();
 
     if (view) {
@@ -142,7 +142,7 @@
         App.render();
       })
       .catch(function (err) {
-        console.warn('Buku Uang: penyimpanan akun tidak tersambung', err);
+        console.warn('Buku Hutang: penyimpanan akun tidak tersambung', err);
         App.cloud.status = 'error';
         ui.renderSyncStatus();
       })
@@ -158,7 +158,7 @@
         App.cloud
           .signOut()
           .catch(function (err) {
-            console.warn('Buku Uang: gagal keluar dari sesi', err);
+            console.warn('Buku Hutang: gagal keluar dari sesi', err);
           })
           .then(function () {
             App.auth.show();

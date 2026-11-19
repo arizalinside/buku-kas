@@ -35,21 +35,19 @@
       return true;
     });
 
-    var income = 0;
     var expense = 0;
+    var borrowed = 0;
     var paid = 0;
     var byDate = {};
 
     list.forEach(function (t) {
-      if (t.type === 'income') income += t.amount;
-      else if (t.type === 'expense') expense += t.amount;
-      else if (t.type === 'debt_payment') paid += t.amount;
-
-      if (t.type === 'expense' || t.type === 'income') {
-        if (!byDate[t.date]) byDate[t.date] = { income: 0, expense: 0 };
-        if (t.type === 'income') byDate[t.date].income += t.amount;
-        else byDate[t.date].expense += t.amount;
+      if (t.type === 'debt_payment') {
+        paid += t.amount;
+        return;
       }
+      expense += t.amount;
+      if (t.funding !== 'business') borrowed += t.amount;
+      byDate[t.date] = (byDate[t.date] || 0) + t.amount;
     });
 
     var topExpenses = list
@@ -81,7 +79,7 @@
             );
           })
           .join('')
-      : ui.empty({ icon: 'chart', title: 'Belum ada pengeluaran', compact: true });
+      : ui.empty({ icon: 'chart', title: 'Belum ada belanja', compact: true });
 
     var catHTML = catTotals.length
       ? '<table class="table"><thead><tr><th>Kategori</th><th class="num">Jumlah</th></tr></thead><tbody>' +
@@ -94,14 +92,12 @@
       : ui.empty({ icon: 'chart', title: 'Belum ada kategori', compact: true });
 
     var dailyHTML = days.length
-      ? '<table class="table"><thead><tr><th>Tanggal</th><th class="num">Masuk</th><th class="num">Keluar</th></tr></thead><tbody>' +
+      ? '<table class="table"><thead><tr><th>Tanggal</th><th class="num">Belanja</th></tr></thead><tbody>' +
         days
           .map(function (d) {
-            var row = byDate[d];
             return (
               '<tr><td>' + ui.dateLabel(d) + '</td>' +
-              '<td class="num pos">' + ui.rupiah(row.income) + '</td>' +
-              '<td class="num neg">' + ui.rupiah(row.expense) + '</td></tr>'
+              '<td class="num neg">' + ui.rupiah(byDate[d]) + '</td></tr>'
             );
           })
           .join('') +
@@ -110,7 +106,7 @@
 
     root.innerHTML =
       '<div class="page-head">' +
-      '<div><h1>Rekap</h1><p class="sub">Ringkasan uang masuk dan keluar</p></div>' +
+      '<div><h1>Rekap</h1><p class="sub">Ringkasan belanja dan hutang</p></div>' +
       '</div>' +
 
       '<div class="card">' +
@@ -129,18 +125,18 @@
       '</div>' +
 
       '<div class="stat-grid stat-grid-3" style="margin-top:14px">' +
-      '<div class="card stat"><span class="stat-label">Uang masuk</span>' +
-      '<strong class="stat-value pos">' + ui.rupiah(income) + '</strong></div>' +
-      '<div class="card stat"><span class="stat-label">Uang keluar</span>' +
+      '<div class="card stat"><span class="stat-label">Total belanja</span>' +
       '<strong class="stat-value neg">' + ui.rupiah(expense) + '</strong></div>' +
-      '<div class="card stat stat-highlight"><span class="stat-label">Sisa</span>' +
-      '<strong class="stat-value ' + (income - expense - paid < 0 ? 'neg' : '') + '">' +
-      ui.rupiah(income - expense - paid) + '</strong>' +
-      '<span class="stat-meta">Dikurangi bayar hutang ' + ui.rupiah(paid) + '</span></div>' +
+      '<div class="card stat"><span class="stat-label">Dari uang pribadi</span>' +
+      '<strong class="stat-value">' + ui.rupiah(borrowed) + '</strong>' +
+      '<span class="stat-meta">Menambah hutang</span></div>' +
+      '<div class="card stat stat-highlight"><span class="stat-label">Bayar hutang</span>' +
+      '<strong class="stat-value pay">' + ui.rupiah(paid) + '</strong>' +
+      '<span class="stat-meta">Dari uang toko ' + ui.rupiah(expense - borrowed) + '</span></div>' +
       '</div>' +
 
       '<div class="grid-2 grid-2-even" style="margin-top:14px">' +
-      '<section class="card"><div class="card-head"><h2>Pengeluaran terbesar</h2></div>' +
+      '<section class="card"><div class="card-head"><h2>Belanja terbesar</h2></div>' +
       topHTML + '</section>' +
       '<section class="card"><div class="card-head"><h2>Per hari</h2></div>' +
       dailyHTML + '</section>' +
@@ -171,5 +167,7 @@
         App.render();
       });
     }
+
+    if (App.motion) App.motion.enter(root);
   };
 })();

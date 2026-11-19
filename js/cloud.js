@@ -29,11 +29,11 @@
           }
         });
       } catch (e) {
-        console.warn('Buku Uang: gagal menyiapkan Supabase', e);
+        console.warn('Buku Hutang: gagal menyiapkan Supabase', e);
         cloud.configured = false;
       }
     } else {
-      console.warn('Buku Uang: pustaka Supabase tidak termuat');
+      console.warn('Buku Hutang: pustaka Supabase tidak termuat');
       cloud.configured = false;
     }
   }
@@ -155,7 +155,7 @@
         cloud.status = 'saved';
       })
       .catch(function (err) {
-        console.warn('Buku Uang: gagal menyimpan ke akun', err);
+        console.warn('Buku Hutang: gagal menyimpan ke akun', err);
         cloud.status = 'error';
       })
       .then(function () {

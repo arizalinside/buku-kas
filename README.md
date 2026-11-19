@@ -1,49 +1,61 @@
-# Buku Uang
+# Buku Hutang
 
-Pencatatan **kas toko**: uang masuk, uang keluar, dan hutang ke uang pribadi.
-Dibuat supaya orang yang bukan akuntan bisa mencatat belanja harian dengan
-cepat — misalnya "beli minyak goreng 2 liter Rp72.000" — lalu langsung tahu
-sudah keluar berapa.
+Pencatatan **belanja toko dan hutang ke uang pribadi**. Dibuat supaya orang
+yang bukan akuntan bisa mencatat belanja harian dengan cepat — misalnya
+"beli minyak goreng 2 liter Rp72.000" — lalu langsung tahu masih berapa
+hutangnya ke uang pribadi.
 
 Nama folder proyek: `KasBuku`.
 
+## Kenapa tanpa uang masuk
+
+Aplikasi ini sengaja **tidak** mencatat uang masuk. Penjualan toko — baik
+Shopee maupun offline — belum pernah dicatat lengkap, sehingga kas dan untung
+yang dihitung dari catatan setengah jadi akan menyesatkan. Yang dicatat hanya
+angka yang bisa dipercaya: berapa yang sudah dibelanjakan, dan berapa yang
+sudah dibayarkan.
+
+Uang penjualan yang dipakai mengganti uang pribadi dicatat sebagai **Bayar
+hutang**, bukan sebagai uang masuk.
+
 ## Empat halaman
 
-- **Beranda** — uang masuk dan keluar hari ini, uang di toko, kartu hutang
-  (total pengeluaran, total hutang, sudah dibayar, sisa hutang), dan catatan
-  terakhir.
+- **Beranda** — sisa hutang sebagai angka utama, dengan total hutang dan
+  sudah dibayar sebagai pendukung serta bilah kemajuan. Di bawahnya belanja
+  hari ini, grafik belanja per tanggal dengan filter tanggal, dan catatan
+  terakhir. Animasi memakai GSAP dan otomatis dimatikan bila perangkat
+  meminta kurangi gerak.
 - **Catatan** — daftar semua catatan dengan:
   - pencarian kata (mis. "minyak")
   - filter tanggal: hari ini, kemarin, 7 hari, 30 hari, bulan ini, semua, atau
     rentang pilihan sendiri
-  - filter jenis: semua, uang masuk, uang keluar, bayar hutang
+  - filter jenis: semua, belanja, bayar hutang
   - paginasi dengan pilihan 10 / 25 / 50 / 100 per halaman
-- **Rekap** — ringkasan per rentang tanggal, pengeluaran terbesar, dan rincian
-  per hari.
+- **Rekap** — ringkasan per rentang tanggal: total belanja, bagian yang
+  dibayar dari uang pribadi, pembayaran hutang, belanja terbesar, rincian per
+  hari, dan per kategori.
 - **Pengaturan** — cadangan otomatis, unduh/impor data, isi contoh, hapus data.
 
 Tombol tambah berupa tombol bulat di kanan bawah. Setelah ditekan, pilih
-**Uang masuk**, **Uang keluar**, atau **Bayar hutang**.
+**Belanja** atau **Bayar hutang**.
 
 ## Hutang ke uang pribadi
 
 Uang toko berasal dari uang pribadi pemilik, jadi belanja yang dibayar dari uang
 pribadi dicatat sebagai hutang toko:
 
-- **Uang keluar** punya pilihan sumber dana: **uang pribadi** (menambah hutang)
-  atau **uang toko** (tidak menambah hutang).
+- **Belanja** punya pilihan sumber dana: **uang pribadi** (menambah hutang)
+  atau **uang toko** (tidak menambah hutang, misalnya dibayar dari saldo
+  Shopee).
 - **Bayar hutang** mengurangi sisa hutang. Ini bukan belanja baru, jadi tidak
   dihitung sebagai pengeluaran.
-- **Uang di toko** = uang masuk − belanja dari uang toko − bayar hutang.
-
-Tidak ada menu pindah dana. Menyetor uang pribadi ke rekening toko cukup
-dicatat sebagai **uang masuk**.
+- **Sisa hutang** = belanja dari uang pribadi − bayar hutang.
 
 ## Data awal
 
 - `data/belanja-2026.csv` — data belanja yang Anda kirim, apa adanya.
-- `data/transactions.json` — hasil konversi ke format aplikasi (100 catatan,
-  siap diimpor lewat Pengaturan → Impor).
+- `data/transactions.json` — hasil konversi ke format aplikasi (100 catatan:
+  88 belanja dan 12 pembayaran hutang, siap diimpor lewat Pengaturan → Impor).
 
 ## Menjalankan
 
@@ -95,15 +107,18 @@ docs/                       panduan Supabase dan Vercel
 ## Aturan yang dijaga
 
 - Uang selalu **integer rupiah**, tidak pernah float.
-- Saldo dan hutang **dihitung ulang** dari catatan, bukan angka tersimpan.
-- Belanja dari uang pribadi menambah hutang; bayar hutang tidak dihitung
-  sebagai belanja.
-- Data versi lama (buku/akun/pindah dana) dimigrasikan otomatis: pindah dana
-  dibuang, saldo awal dijadikan uang masuk pertama, belanja lama dianggap
-  dibayar dari uang pribadi.
+- Sisa hutang **dihitung ulang** dari catatan, bukan angka tersimpan.
+- Belanja dari uang pribadi menambah hutang; belanja dari uang toko tidak.
+- Bayar hutang tidak dihitung sebagai belanja.
+- Data versi lama dimigrasikan otomatis: catatan uang masuk dibuang, transfer,
+  pindah dana, prive, dan modal diabaikan, dan belanja lama dianggap dibayar
+  dari uang pribadi.
 
 ## Batasan
 
+- Belum ada pencatatan uang masuk, jadi aplikasi ini tidak bisa menghitung
+  untung atau rugi. Ia menjawab satu pertanyaan: berapa hutang toko ke uang
+  pribadi.
 - Sinkronisasi memakai aturan **tulisan terakhir menang**.
 - Paket gratis Supabase mengistirahatkan project setelah 7 hari tanpa pemakaian.
   Data tidak hilang, project tinggal dibangunkan.
@@ -112,5 +127,4 @@ docs/                       panduan Supabase dan Vercel
 
 ## Berikutnya
 
-- Impor mutasi rekening / laporan Shopee (CSV)
 - Cetak/ekspor laporan bulanan ke PDF
