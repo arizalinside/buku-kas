@@ -72,6 +72,17 @@
     return 'Rp0';
   };
 
+  // Bentuk ringkas untuk label sumbu grafik: Rp0, Rp250 rb, Rp1,2 jt
+  ui.rupiahShort = function (n) {
+    var v = Math.round(Number(n) || 0);
+    if (v >= 1000000) {
+      var jt = Math.round((v / 1000000) * 10) / 10;
+      return 'Rp' + String(jt).replace('.', ',') + ' jt';
+    }
+    if (v >= 1000) return 'Rp' + Math.round(v / 1000).toLocaleString('id-ID') + ' rb';
+    return 'Rp' + v.toLocaleString('id-ID');
+  };
+
   ui.parseAmount = function (text) {
     var digits = String(text == null ? '' : text).replace(/[^\d]/g, '');
     return digits ? parseInt(digits, 10) : 0;
@@ -108,6 +119,13 @@
     var p = dateParts(dateStr);
     if (!p) return String(dateStr || '');
     return p.d + ' ' + MONTHS_SHORT[p.m - 1];
+  };
+
+  // Nama bulan singkat untuk label sumbu grafik: "Nov"
+  ui.monthShort = function (dateStr) {
+    var p = dateParts(dateStr);
+    if (!p) return '';
+    return MONTHS_SHORT[p.m - 1] || '';
   };
 
   // Jam dan tanggal berjalan menurut WIB, bukan zona waktu perangkat.

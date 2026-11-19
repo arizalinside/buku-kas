@@ -401,59 +401,123 @@
       });
   }
 
-  // Data grafik: total belanja per tanggal, digabung jadi beberapa batang
-  // kalau rentangnya panjang supaya tetap terbaca di layar ponsel.
-  function chartTotals(from, to, maxBars) {
-    var map = {};
-    var dataDates = [];
+  // Data grafik: belanja per hari, dan per minggu hanya kalau rentangnya
+  // lebih dari dua bulan supaya batangnya tidak kebanyakan.
+  // Setiap hari di rentang tetap muncul walau tidak ada belanja.
+  function chartSeries(from, to, maxDays) {
+    var limit = maxDays || 62;
 
-    transactions().forEach(function (t) {
-      if (t.type !== 'expense') return;
-      if (from && t.date < from) return;
-      if (to && t.date > to) return;
-      if (!map[t.date]) {
-        map[t.date] = { date: t.date, expense: 0 };
-        dataDates.push(t.date);
-      }
-      map[t.date].expense += t.amount;
+    var list = transactions().filter(function (t) {
+      if (t.type !== 'expense') return false;
+      if (from && t.date < from) return false;
+      if (to && t.date > to) return false;
+      return true;
     });
 
-    // Kalau rentangnya jelas, isi juga hari yang tidak ada catatannya
-    // supaya grafiknya punya jarak waktu yang benar.
-    var dates;
-    if (from && to) {
-      dates = [];
-      var cursor = from;
-      var guard = 0;
-      while (cursor <= to && guard < 400) {
-        dates.push(cursor);
-        cursor = shiftDate(cursor, 1);
-        guard += 1;
-      }
-    } else {
-      dates = dataDates.slice().sort();
+    var start = from;
+    var end = to;
+
+    if (!start || !end) {
+      var dataDates = list
+        .map(function (t) {
+          return t.date;
+        })
+        .sort();
+
+      if (!dataDates.length) return emptySeries();
+
+      if (!start) start = dataDates[0];
+      if (!end) end = dataDates[dataDates.length - 1];
     }
 
-    var rows = dates.map(function (d) {
-      return map[d] || { date: d, expense: 0 };
+    if (start > end) {
+      var swap = start;
+      start = end;
+      end = swap;
+    }
+
+    var map = {};
+    list.forEach(function (t) {
+      if (!map[t.date]) map[t.date] = { date: t.date, expense: 0, count: 0 };
+      map[t.date].expense += t.amount;
+      map[t.date].count += 1;
     });
 
-    if (!rows.length) return [];
+    var rows = [];
+    var cursor = start;
+    var guard = 0;
+    while (cursor <= end && guard < 400) {
+      rows.push(map[cursor] || { date: cursor, expense: 0, count: 0 });
+      cursor = shiftDate(cursor, 1);
+      guard += 1;
+    }
 
-    var bucketSize = Math.max(1, Math.ceil(rows.length / (maxBars || 14)));
-    if (bucketSize === 1) return rows;
+    if (!rows.length) return emptySeries();
 
-    var out = [];
-    for (var i = 0; i < rows.length; i += bucketSize) {
-      var chunk = rows.slice(i, i + bucketSize);
-      out.push({
-        date: chunk[0].date,
-        expense: chunk.reduce(function (n, r) {
-          return n + r.expense;
-        }, 0)
+    var total = 0;
+    var peak = 0;
+    var peakDate = '';
+    var daysWithSpending = 0;
+
+    rows.forEach(function (r) {
+      total += r.expense;
+      if (r.expense > 0) daysWithSpending += 1;
+      if (r.expense > peak) {
+        peak = r.expense;
+        peakDate = r.date;
+      }
+    });
+
+    if (rows.length <= limit) {
+      return {
+        rows: rows,
+        total: total,
+        peak: peak,
+        peakDate: peakDate,
+        days: rows.length,
+        daysWithSpending: daysWithSpending,
+        grouped: false
+      };
+    }
+
+    var grouped = [];
+    for (var i = 0; i < rows.length; i += 7) {
+      var chunk = rows.slice(i, i + 7);
+      var sum = 0;
+      var count = 0;
+      chunk.forEach(function (r) {
+        sum += r.expense;
+        count += r.count;
+      });
+      grouped.push({
+        from: chunk[0].date,
+        to: chunk[chunk.length - 1].date,
+        expense: sum,
+        count: count
       });
     }
-    return out;
+
+    return {
+      rows: grouped,
+      total: total,
+      peak: peak,
+      peakDate: peakDate,
+      days: rows.length,
+      daysWithSpending: daysWithSpending,
+      grouped: true
+    };
+  }
+
+  function emptySeries() {
+    return {
+      rows: [],
+      total: 0,
+      peak: 0,
+      peakDate: '',
+      days: 0,
+      daysWithSpending: 0,
+      grouped: false
+    };
   }
 
   /* ---------- preferensi ---------- */
@@ -557,7 +621,7 @@
 
     categories: categories,
     categoryTotals: categoryTotals,
-    chartTotals: chartTotals,
+    chartSeries: chartSeries,
     filterTransactions: filterTransactions,
     perPage: perPage,
     setPerPage: setPerPage,
