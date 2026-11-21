@@ -7,7 +7,7 @@
    ============================================================ */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --paper: #fbfbfa;
   --surface: #ffffff;
@@ -60,37 +60,39 @@
   --focus: 0 0 0 3px rgba(15, 92, 71, 0.28);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #121513;
-    --surface: #191d19;
-    --surface-sunk: #20251f;
+/* Tema gelap dipakai bila dipilih di Pengaturan atau saat mengikuti
+   perangkat yang sedang gelap. Atributnya dipasang oleh js/theme.js. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-    --ink: #ecefe9;
-    --ink-soft: #c3c9c1;
-    --ink-muted: #9aa29b;
+  --paper: #121513;
+  --surface: #191d19;
+  --surface-sunk: #20251f;
 
-    --rule: #2a2f2b;
-    --rule-strong: #3d443e;
+  --ink: #ecefe9;
+  --ink-soft: #c3c9c1;
+  --ink-muted: #9aa29b;
 
-    --leaf: #73c7a8;
-    --leaf-strong: #9adcc1;
-    --leaf-soft: #1c3229;
+  --rule: #2a2f2b;
+  --rule-strong: #3d443e;
 
-    --money-in: #7fcbaa;
-    --money-out: #e7907a;
-    --money-out-soft: #2f1d19;
-    --pay: #9db8e6;
-    --pay-soft: #1d2531;
+  --leaf: #73c7a8;
+  --leaf-strong: #9adcc1;
+  --leaf-soft: #1c3229;
 
-    --overlay: rgba(4, 6, 5, 0.62);
-    --sheen: rgba(255, 255, 255, 0.55);
-    --inverse: #121513;
+  --money-in: #7fcbaa;
+  --money-out: #e7907a;
+  --money-out-soft: #2f1d19;
+  --pay: #9db8e6;
+  --pay-soft: #1d2531;
 
-    --shadow-overlay: 0 24px 48px -24px rgba(0, 0, 0, 0.85);
-    --shadow-fab: 0 10px 20px -12px rgba(0, 0, 0, 0.75);
-    --focus: 0 0 0 3px rgba(115, 199, 168, 0.4);
-  }
+  --overlay: rgba(4, 6, 5, 0.62);
+  --sheen: rgba(255, 255, 255, 0.55);
+  --inverse: #121513;
+
+  --shadow-overlay: 0 24px 48px -24px rgba(0, 0, 0, 0.85);
+  --shadow-fab: 0 10px 20px -12px rgba(0, 0, 0, 0.75);
+  --focus: 0 0 0 3px rgba(115, 199, 168, 0.4);
 }
 
 /* ---------- dasar ---------- */
@@ -1672,10 +1674,6 @@ svg.ic {
   place-items: center;
   flex: none;
   color: var(--ink-muted);
-}
-
-.danger-zone {
-  border-color: var(--rule-strong);
 }
 
 .note-box {

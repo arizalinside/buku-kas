@@ -72,7 +72,7 @@
 
     root.innerHTML =
       '<div class="page-head"><div><h1>Pengaturan</h1>' +
-      '<p class="sub">Akun, cadangan, dan data</p></div></div>' +
+      '<p class="sub">Akun, tampilan, dan data</p></div></div>' +
       '<div class="settings-grid">' +
       accountHTML +
 
@@ -82,6 +82,22 @@
       '<div><div class="setting-title">Ubah kata sandi</div>' +
       '<div class="muted small">Dipakai untuk masuk. Tidak perlu email.</div></div>' +
       '<button class="btn btn-ghost btn-sm" id="btn-change-pass">Ubah</button>' +
+      '</div>' +
+      '</section>' +
+
+      '<section class="card">' +
+      '<div class="card-head"><h2>Tampilan</h2></div>' +
+      '<div class="setting-row">' +
+      '<div><div class="setting-title">Tema</div>' +
+      '<div class="muted small">Pilih warna latar yang paling nyaman dilihat.</div></div>' +
+      '<div class="segmented" id="theme-seg" role="group" aria-label="Pilih tema">' +
+      App.theme.CHOICES.map(function (c) {
+        var active = App.theme.choice() === c.value;
+        return '<button type="button" class="seg' + (active ? ' active' : '') +
+          '" data-theme-choice="' + c.value + '" aria-pressed="' +
+          (active ? 'true' : 'false') + '">' + ui.esc(c.label) + '</button>';
+      }).join('') +
+      '</div>' +
       '</div>' +
       '</section>' +
 
@@ -104,27 +120,16 @@
       '</div>' +
       '</section>' +
 
-      '<section class="card danger-zone">' +
-      '<div class="card-head"><h2>Hapus data</h2></div>' +
-      '<div class="setting-row">' +
-      '<div><div class="setting-title">Hapus semua catatan</div>' +
-      '<div class="muted small">Semua belanja dan pembayaran hutang dihapus.</div></div>' +
-      '<button class="btn btn-ghost btn-sm" id="btn-clear">Hapus catatan</button>' +
-      '</div>' +
-      '<div class="setting-row">' +
-      '<div><div class="setting-title">Mulai dari nol</div>' +
-      '<div class="muted small">Kembalikan semuanya ke pengaturan awal.</div></div>' +
-      '<button class="btn btn-danger btn-sm" id="btn-reset">Reset semua</button>' +
-      '</div>' +
-      '</section>' +
-
       '<section class="card">' +
       '<div class="card-head"><h2>Tentang aplikasi</h2></div>' +
-      '<p class="note-box">' +
-      'Buku Hutang — pencatatan belanja dan hutang toko. Login memakai akun Supabase; ' +
-      'kata sandi tidak disimpan di aplikasi. Untuk mengubahnya, buka ' +
-      'Authentication &rarr; Users di dashboard Supabase.' +
-      '</p>' +
+      '<p>Buku Hutang membantu Anda mencatat belanja toko dan langsung tahu berapa ' +
+      'hutangnya ke uang pribadi. Cukup catat apa yang dibeli dan berapa jumlahnya; ' +
+      'sisanya dihitung sendiri oleh aplikasi.</p>' +
+      '<p class="muted small" style="margin-top:8px">Catatan tersimpan di akun Anda, ' +
+      'jadi bisa dibuka dari ponsel atau komputer lain.</p>' +
+      '<p class="note-box" style="margin-top:12px">Aplikasi ini tidak mencatat uang masuk, ' +
+      'jadi tidak menghitung untung atau rugi. Yang dicatat hanya dua hal yang bisa ' +
+      'dipercaya: berapa yang sudah dibelanjakan dan berapa yang sudah dibayarkan.</p>' +
       '</section>' +
       '</div>';
 
@@ -315,29 +320,20 @@
       );
     });
 
-    document.getElementById('btn-clear').addEventListener('click', function () {
-      ui.confirm(
-        'Hapus semua catatan? Tindakan ini tidak bisa dibatalkan.',
-        function () {
-          s.clearTransactions();
-          ui.toast('Semua catatan dihapus.');
-          App.render();
-        },
-        { danger: true, yesLabel: 'Hapus semua' }
-      );
-    });
+    var themeSeg = document.getElementById('theme-seg');
+    if (themeSeg) {
+      themeSeg.querySelectorAll('.seg').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          App.theme.set(btn.getAttribute('data-theme-choice'));
 
-    document.getElementById('btn-reset').addEventListener('click', function () {
-      ui.confirm(
-        'Kembalikan semuanya ke pengaturan awal? Semua catatan akan hilang.',
-        function () {
-          s.resetAll();
-          ui.toast('Data dikembalikan ke awal.');
-          App.render();
-        },
-        { danger: true, yesLabel: 'Reset' }
-      );
-    });
+          themeSeg.querySelectorAll('.seg').forEach(function (b) {
+            var on = b === btn;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+        });
+      });
+    }
 
     if (App.motion) App.motion.enter(root);
   };

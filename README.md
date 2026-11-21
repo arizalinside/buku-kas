@@ -35,7 +35,8 @@ hutang**, bukan sebagai uang masuk.
 - **Rekap** — ringkasan per rentang tanggal: total belanja, bagian yang
   dibayar dari uang pribadi, pembayaran hutang, belanja terbesar, rincian per
   hari, dan per kategori.
-- **Pengaturan** — cadangan otomatis, unduh/impor data, isi contoh, hapus data.
+- **Pengaturan** — cadangan otomatis, unduh/impor data, isi contoh, kata sandi,
+  dan tema **terang / gelap / ikuti perangkat**.
 
 Tombol tambah berupa tombol bulat di kanan bawah. Setelah ditekan, pilih
 **Belanja** atau **Bayar hutang**.
@@ -94,6 +95,7 @@ css/styles.css
 js/config.js                login + nilai Supabase
 js/store.js                 catatan, hitungan hutang, filter, paginasi, migrasi
 js/ui.js                    format rupiah, tanggal, jam WIB, modal
+js/theme.js                 tema terang, gelap, atau ikuti perangkat
 js/cloud.js                 penyimpanan akun Supabase
 js/views.auth.js            layar masuk
 js/views.dashboard.js       beranda + kartu hutang
@@ -111,6 +113,7 @@ docs/                       panduan Supabase dan Vercel
 - Sisa hutang **dihitung ulang** dari catatan, bukan angka tersimpan.
 - Belanja dari uang pribadi menambah hutang; belanja dari uang toko tidak.
 - Bayar hutang tidak dihitung sebagai belanja.
+- Tidak ada tombol hapus semua data; catatan hanya bisa dihapus satu per satu.
 - Data versi lama dimigrasikan otomatis: catatan uang masuk dibuang, transfer,
   pindah dana, prive, dan modal diabaikan, dan belanja lama dianggap dibayar
   dari uang pribadi.
