@@ -119,7 +119,9 @@ docs/                       panduan Supabase dan Vercel
 - Belum ada pencatatan uang masuk, jadi aplikasi ini tidak bisa menghitung
   untung atau rugi. Ia menjawab satu pertanyaan: berapa hutang toko ke uang
   pribadi.
-- Sinkronisasi memakai aturan **tulisan terakhir menang**.
+- Sinkronisasi memakai aturan **tulisan terakhir menang**: perangkat yang paling
+  akhir diubah yang dipakai, dan catatan di perangkat yang belum sempat terkirim
+  ikut dikirim ke akun, bukan dihapus.
 - Paket gratis Supabase mengistirahatkan project setelah 7 hari tanpa pemakaian.
   Data tidak hilang, project tinggal dibangunkan.
 - Kata sandi tidak ada di kode. Yang ada di `js/config.js` hanya kunci anon
