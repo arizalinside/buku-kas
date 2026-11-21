@@ -410,7 +410,10 @@
 
       chartWrap.addEventListener('pointerleave', function (e) {
         if (dragging || e.pointerType === 'touch') return;
-        if (pickIndex >= 0) showAt(pickIndex, false);
+        // Gelembung angkanya disembunyikan, tetapi titik terakhir yang dibaca
+        // tetap di tempatnya supaya tidak melompat balik ke titik awal.
+        if (active >= 0) showAt(active, false);
+        else if (pickIndex >= 0) showAt(pickIndex, false);
         else hideTip();
       });
 
