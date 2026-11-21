@@ -153,8 +153,7 @@
       '</div>' +
       summaryHTML +
       (hasChart
-        ? '<div class="chart-wrap" id="chart-wrap"></div>' +
-          '<div class="chart-detail" id="chart-detail"></div>'
+        ? '<div class="chart-wrap" id="chart-wrap"></div>'
         : ui.empty({
             icon: 'chart',
             title: 'Belum ada belanja di rentang ini',
@@ -194,20 +193,6 @@
 
     function rowLabel(row) {
       return ui.dateLabel(row.date);
-    }
-
-    function detailHtml(row) {
-      var countText = row.count ? row.count + ' catatan' : 'Tidak ada belanja';
-      return (
-        '<span class="chart-detail-when">' + ui.esc(rowLabel(row)) +
-        '<em>' + ui.esc(countText) + '</em></span>' +
-        '<strong>' + ui.rupiah(row.expense) + '</strong>'
-      );
-    }
-
-    function setReadout(index) {
-      var detail = document.getElementById('chart-detail');
-      if (detail && series.rows[index]) detail.innerHTML = detailHtml(series.rows[index]);
     }
 
     var chartWrap = document.getElementById('chart-wrap');
@@ -341,8 +326,6 @@
         dotEl.setAttribute('cx', x);
         dotEl.setAttribute('cy', y);
         dotEl.style.display = '';
-
-        setReadout(index);
 
         if (!withTip) {
           tipEl.hidden = true;
