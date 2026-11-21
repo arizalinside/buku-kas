@@ -22,7 +22,8 @@ hutang**, bukan sebagai uang masuk.
 
 - **Beranda** — sisa hutang sebagai angka utama, dengan total hutang dan
   sudah dibayar sebagai pendukung serta bilah kemajuan. Di bawahnya belanja
-  hari ini, grafik belanja per tanggal dengan filter tanggal, dan catatan
+  hari ini, grafik belanja per tanggal dengan filter tanggal (paling jauh 90
+  hari terakhir, supaya garisnya tetap terbaca), dan catatan
   terakhir. Animasi memakai GSAP dan otomatis dimatikan bila perangkat
   meminta kurangi gerak.
 - **Catatan** — daftar semua catatan dengan:

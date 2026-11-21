@@ -78,8 +78,7 @@
       var firstRow = series.rows[0];
       var lastRow = series.rows[series.rows.length - 1];
       rangeText =
-        ui.dateShort(series.grouped ? firstRow.from : firstRow.date) + ' – ' +
-        ui.dateShort(series.grouped ? lastRow.to : lastRow.date);
+        ui.dateShort(firstRow.date) + ' – ' + ui.dateShort(lastRow.date);
 
       // Titik awal yang dibaca: hari terakhir yang ada belanjanya.
       for (var p = series.rows.length - 1; p >= 0; p--) {
@@ -136,6 +135,9 @@
       '<div class="card-head"><h2>Belanja per tanggal</h2></div>' +
       '<p class="chart-note muted small">' +
       (rangeText ? ui.esc(rangeText) + ' · ' : '') +
+      (series.clipped
+        ? 'menampilkan ' + s.CHART_MAX_DAYS + ' hari terakhir · '
+        : '') +
       'garis menunjukkan jumlah belanja tiap hari. Arahkan atau sentuh titik untuk melihat angkanya.</p>' +
       '<div class="chips" id="chart-ranges">' +
       RANGES.map(function (r) {
@@ -159,7 +161,8 @@
             text: 'Pilih rentang tanggal lain atau catat belanja pertama Anda.',
             compact: true
           })) +
-      '<p class="mini-foot muted">Rentang tanggal sama dengan filter di halaman Catatan.</p>' +
+      '<p class="mini-foot muted">Rentang tanggal mengikuti filter di halaman Catatan, ' +
+      'grafik paling jauh ' + s.CHART_MAX_DAYS + ' hari.</p>' +
       '</section>' +
 
       '<section class="card" style="margin-top:14px">' +
@@ -190,9 +193,7 @@
     /* ---------- grafik garis ---------- */
 
     function rowLabel(row) {
-      return series.grouped
-        ? ui.dateShort(row.from) + ' – ' + ui.dateShort(row.to)
-        : ui.dateLabel(row.date);
+      return ui.dateLabel(row.date);
     }
 
     function detailHtml(row) {
@@ -301,11 +302,10 @@
         lastX = x;
 
         var anchor = i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle';
-        var key = series.grouped ? row.from : row.date;
 
         parts.push(
           '<text class="chart-axis-label" x="' + x + '" y="' + (height - 8) +
-          '" text-anchor="' + anchor + '">' + ui.esc(ui.dateShort(key)) + '</text>'
+          '" text-anchor="' + anchor + '">' + ui.esc(ui.dateShort(row.date)) + '</text>'
         );
       });
 

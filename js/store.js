@@ -451,21 +451,24 @@
       });
   }
 
-  // Data grafik: belanja per hari, dan per minggu hanya kalau rentangnya
-  // lebih dari dua bulan supaya batangnya tidak kebanyakan.
-  // Setiap hari di rentang tetap muncul walau tidak ada belanja.
+  // Data grafik: belanja per hari dalam rentang tanggal. Rentangnya dibatasi
+  // supaya garisnya tetap terbaca dan tidak keluar dari kartu, dan setiap hari
+  // di rentang tetap muncul walau tidak ada belanja.
+  var CHART_MAX_DAYS = 90;
+
   function chartSeries(from, to, maxDays) {
-    var limit = maxDays || 62;
+    var limit =
+      Number(maxDays) > 0 ? Math.min(400, Math.floor(Number(maxDays))) : CHART_MAX_DAYS;
 
     var list = transactions().filter(function (t) {
       if (t.type !== 'expense') return false;
-      if (from && t.date < from) return false;
-      if (to && t.date > to) return false;
+      if (isDate(from) && t.date < from) return false;
+      if (isDate(to) && t.date > to) return false;
       return true;
     });
 
-    var start = from;
-    var end = to;
+    var start = isDate(from) ? from : '';
+    var end = isDate(to) ? to : '';
 
     if (!start || !end) {
       var dataDates = list
@@ -486,8 +489,18 @@
       end = swap;
     }
 
+    // Rentang yang lebih panjang dari batas dipotong dari awal, jadi yang
+    // tampil adalah hari-hari terakhir — angka terbaru yang paling berguna.
+    var span = daysBetween(start, end) + 1;
+    var clipped = false;
+    if (span > limit) {
+      start = shiftDate(end, -(limit - 1));
+      clipped = true;
+    }
+
     var map = {};
     list.forEach(function (t) {
+      if (t.date < start || t.date > end) return;
       if (!map[t.date]) map[t.date] = { date: t.date, expense: 0, count: 0 };
       map[t.date].expense += t.amount;
       map[t.date].count += 1;
@@ -496,7 +509,7 @@
     var rows = [];
     var cursor = start;
     var guard = 0;
-    while (cursor <= end && guard < 400) {
+    while (cursor <= end && guard <= limit) {
       rows.push(map[cursor] || { date: cursor, expense: 0, count: 0 });
       cursor = shiftDate(cursor, 1);
       guard += 1;
@@ -518,44 +531,23 @@
       }
     });
 
-    if (rows.length <= limit) {
-      return {
-        rows: rows,
-        total: total,
-        peak: peak,
-        peakDate: peakDate,
-        days: rows.length,
-        daysWithSpending: daysWithSpending,
-        grouped: false
-      };
-    }
-
-    var grouped = [];
-    for (var i = 0; i < rows.length; i += 7) {
-      var chunk = rows.slice(i, i + 7);
-      var sum = 0;
-      var count = 0;
-      chunk.forEach(function (r) {
-        sum += r.expense;
-        count += r.count;
-      });
-      grouped.push({
-        from: chunk[0].date,
-        to: chunk[chunk.length - 1].date,
-        expense: sum,
-        count: count
-      });
-    }
-
     return {
-      rows: grouped,
+      rows: rows,
       total: total,
       peak: peak,
       peakDate: peakDate,
       days: rows.length,
       daysWithSpending: daysWithSpending,
-      grouped: true
+      from: start,
+      to: end,
+      clipped: clipped
     };
+  }
+
+  function daysBetween(a, b) {
+    var from = new Date(a + 'T12:00:00');
+    var to = new Date(b + 'T12:00:00');
+    return Math.round((to - from) / 86400000);
   }
 
   function emptySeries() {
@@ -566,7 +558,9 @@
       peakDate: '',
       days: 0,
       daysWithSpending: 0,
-      grouped: false
+      from: '',
+      to: '',
+      clipped: false
     };
   }
 
@@ -672,6 +666,7 @@
 
     categories: categories,
     categoryTotals: categoryTotals,
+    CHART_MAX_DAYS: CHART_MAX_DAYS,
     chartSeries: chartSeries,
     filterTransactions: filterTransactions,
     perPage: perPage,
