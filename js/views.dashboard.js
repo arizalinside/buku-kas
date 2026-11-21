@@ -138,7 +138,7 @@
       (series.clipped
         ? 'menampilkan ' + s.CHART_MAX_DAYS + ' hari terakhir · '
         : '') +
-      'garis menunjukkan jumlah belanja tiap hari. Arahkan atau sentuh titik untuk melihat angkanya.</p>' +
+      'garis menunjukkan jumlah belanja tiap hari. Arahkan atau geser jari di atas grafik untuk melihat angka tiap tanggal.</p>' +
       '<div class="chips" id="chart-ranges">' +
       RANGES.map(function (r) {
         return '<button type="button" class="chip' + (r.value === st.range ? ' active' : '') +
@@ -377,19 +377,41 @@
         return Math.max(0, Math.min(n - 1, Math.round(t * (n - 1))));
       }
 
-      svgEl.addEventListener('pointermove', function (e) {
-        if (e.pointerType === 'touch') return;
+      // Ikuti kursor tanpa perlu klik: menggerakkan mouse di atas grafik atau
+      // menggeser jari di layar sentuh membuat garis dan angkanya ikut bergerak.
+      // Pendengar dipasang di wadah grafik, jadi seluruh bidang terbaca, bukan
+      // hanya tepat di atas garisnya.
+      var dragging = false;
+
+      chartWrap.addEventListener('pointermove', function (e) {
+        if (e.pointerType === 'touch' && !dragging) return;
         showAt(nearestIndex(e.clientX), true);
       });
 
-      svgEl.addEventListener('pointerleave', function (e) {
-        if (e.pointerType === 'touch') return;
+      chartWrap.addEventListener('pointerdown', function (e) {
+        dragging = true;
+        if (typeof chartWrap.setPointerCapture === 'function') {
+          try {
+            chartWrap.setPointerCapture(e.pointerId);
+          } catch (err) {
+            /* browser lama: tanpa penangkapan tetap jalan */
+          }
+        }
+        showAt(nearestIndex(e.clientX), true);
+      });
+
+      chartWrap.addEventListener('pointerup', function () {
+        dragging = false;
+      });
+
+      chartWrap.addEventListener('pointercancel', function () {
+        dragging = false;
+      });
+
+      chartWrap.addEventListener('pointerleave', function (e) {
+        if (dragging || e.pointerType === 'touch') return;
         if (pickIndex >= 0) showAt(pickIndex, false);
         else hideTip();
-      });
-
-      svgEl.addEventListener('pointerdown', function (e) {
-        showAt(nearestIndex(e.clientX), true);
       });
 
       chartWrap.setAttribute('tabindex', '0');

@@ -626,6 +626,9 @@ svg.ic {
   margin-top: var(--s-2);
   touch-action: pan-y;
   outline: none;
+  cursor: crosshair;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .chart-wrap:focus-visible {
