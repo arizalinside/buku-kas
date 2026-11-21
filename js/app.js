@@ -125,26 +125,22 @@
     App.cloud
       .pull(App.cloud.user.id)
       .then(function (remote) {
-        var hasRemote = !!(remote && Array.isArray(remote.transactions));
-        if (hasRemote) {
-          var localCount = (App.store.snapshot().transactions || []).length;
-          var remoteCount = (remote.transactions || []).length;
-          if (remoteCount > 0 || localCount === 0) {
-            App.store.replaceAll(remote);
-          } else {
-            App.cloud.push();
-          }
-        } else {
-          App.cloud.push();
-        }
+        // Catatan di akun dan di perangkat ini disatukan: yang terakhir diubah
+        // menang, dan isi perangkat dikirim ke akun bila dialah yang terbaru.
+        var action = App.store.reconcile(remote);
+
         App.cloud.status = 'saved';
         ui.renderSyncStatus();
         App.render();
+
+        if (action === 'push') App.cloud.push();
       })
       .catch(function (err) {
         console.warn('Buku Hutang: penyimpanan akun tidak tersambung', err);
         App.cloud.status = 'error';
         ui.renderSyncStatus();
+        // Catatan tetap aman di perangkat dan ikut terkirim pada perubahan
+        // berikutnya, atau lewat Pengaturan → Simpan sekarang.
       })
       .then(function () {
         App.cloud.pulling = false;

@@ -138,6 +138,7 @@
       return Promise.resolve();
     }
     pushing = true;
+    var wasError = cloud.status === 'error';
     cloud.status = 'syncing';
     if (App.ui && App.ui.renderSyncStatus) App.ui.renderSyncStatus();
 
@@ -157,6 +158,11 @@
       .catch(function (err) {
         console.warn('Buku Hutang: gagal menyimpan ke akun', err);
         cloud.status = 'error';
+        // Pengguna perlu tahu saat pengiriman gagal, bukan hanya diam-diam
+        // menyimpan di perangkat lalu hilang di perangkat lain.
+        if (!wasError && App.ui && App.ui.toast) {
+          App.ui.toast('Gagal menyimpan ke akun. Data tetap aman di perangkat ini.');
+        }
       })
       .then(function () {
         pushing = false;
@@ -181,8 +187,23 @@
     pushTimer = setTimeout(function () {
       pushTimer = null;
       doPush();
-    }, 1200);
+    }, 500);
   };
+
+  // Kalau halaman ditutup atau ditinggal sebelum jeda pengiriman habis, kirim
+  // sekarang supaya catatan tidak tertinggal hanya di perangkat ini.
+  function flushPush() {
+    if (!cloud.configured || !cloud.user || cloud.pulling) return;
+    if (!pushTimer) return;
+    clearTimeout(pushTimer);
+    pushTimer = null;
+    doPush();
+  }
+
+  window.addEventListener('pagehide', flushPush);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') flushPush();
+  });
 
   /* ---------- pemeriksaan dan sinkronisasi manual ---------- */
 

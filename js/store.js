@@ -72,6 +72,7 @@
   function defaults() {
     return {
       version: VERSION,
+      updatedAt: 0,
       transactions: [],
       settings: { perPage: 25 }
     };
@@ -83,6 +84,7 @@
     if (!raw || typeof raw !== 'object') return defaults();
 
     var out = defaults();
+    out.updatedAt = Number(raw.updatedAt) || 0;
     if (raw.settings && PER_PAGE_OPTIONS.indexOf(Number(raw.settings.perPage)) !== -1) {
       out.settings.perPage = Number(raw.settings.perPage);
     }
@@ -127,25 +129,38 @@
       var raw = localStorage.getItem(DATA_KEY);
       if (raw) {
         state = normalize(JSON.parse(raw));
-        save();
+        save(true);
         return state;
       }
     } catch (e) {
       console.warn('Buku Hutang: gagal membaca data', e);
     }
     state = defaults();
-    save();
+    save(true);
     return state;
   }
 
-  function save() {
+  // Menulis seluruh buku ke perangkat ini. Setiap perubahan dari pengguna juga
+  // membubuhkan tanda waktu dan memberi tahu penyimpanan akun, supaya isi akun
+  // ikut diperbarui — tanpa itu catatan baru hanya ada di perangkat dan hilang
+  // saat halaman dimuat ulang.
+  function save(skipNotify) {
+    if (!state) state = defaults();
+
+    if (!skipNotify) state.updatedAt = Date.now();
+
     try {
       localStorage.setItem(DATA_KEY, JSON.stringify(state));
-      return true;
     } catch (e) {
       console.warn('Buku Hutang: gagal menyimpan data', e);
       return false;
     }
+
+    if (!skipNotify && App.cloud && typeof App.cloud.onLocalSave === 'function') {
+      App.cloud.onLocalSave();
+    }
+
+    return true;
   }
 
   function ensure() {
@@ -160,8 +175,43 @@
   function replaceAll(data) {
     if (!data || !Array.isArray(data.transactions)) return false;
     state = normalize(data);
-    save();
+    save(true);
     return true;
+  }
+
+  // Dipakai saat aplikasi dibuka: tentukan data mana yang dipakai, catatan di
+  // akun atau catatan di perangkat ini. Yang terakhir diubah menang, sehingga
+  // catatan yang belum sempat terkirim tidak terhapus saat halaman dimuat ulang.
+  // Mengembalikan 'replace' bila isi akun dipakai, atau 'push' bila isi
+  // perangkat ini yang harus dikirim ke akun.
+  function reconcile(raw) {
+    ensure();
+
+    if (!raw || !Array.isArray(raw.transactions)) return 'push';
+
+    var remote = normalize(raw);
+    if (!remote.transactions.length) return 'push';
+
+    var localTime = Number(state.updatedAt) || 0;
+    var remoteTime = Number(remote.updatedAt) || 0;
+
+    if (remoteTime === localTime) {
+      // Data versi lama belum punya tanda waktu: pakai jumlah catatan.
+      if (localTime === 0 && state.transactions.length < remote.transactions.length) {
+        state = remote;
+        save(true);
+        return 'replace';
+      }
+      return 'push';
+    }
+
+    if (remoteTime > localTime) {
+      state = remote;
+      save(true);
+      return 'replace';
+    }
+
+    return 'push';
   }
 
   function resetAll() {
@@ -596,6 +646,7 @@
     save: save,
     snapshot: snapshot,
     replaceAll: replaceAll,
+    reconcile: reconcile,
     resetAll: resetAll,
 
     TYPES: TYPES,
